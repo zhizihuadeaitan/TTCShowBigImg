@@ -7,6 +7,7 @@
 //
 
 #import <AssetsLibrary/AssetsLibrary.h>
+
 @import UIKit;
 
 typedef NS_ENUM(NSUInteger,IMAGETYPE) {
@@ -16,7 +17,6 @@ typedef NS_ENUM(NSUInteger,IMAGETYPE) {
 };
 
 #import "TTCPicCollectionViewCell.h"
-
 
 @class TTCShowBigImgView;
 
@@ -38,6 +38,10 @@ typedef void(^XHPicBlock)(CLICKEVENTTYPE clickType);
 @property (nonatomic, strong) UICollectionView *collectionView;
 /** 查看到第几张图 */
 @property (nonatomic, strong) UILabel *imgCountLabel;
+/** 弹出框 */
+@property (nonatomic, strong) UILabel *showMessageLabel;
+/** 弹出框展示信息*/
+@property (nonatomic, copy) NSString *showMessageStr;
 
 
 - (instancetype)initWithFrame:(CGRect)frame withImgs:(NSArray *)imgs withImgeType:(IMAGETYPE)imageType;

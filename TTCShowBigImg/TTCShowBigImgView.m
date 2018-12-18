@@ -45,8 +45,6 @@
         
         self.backgroundColor = [UIColor blackColor];
         
-        
-        
         _selectInteger = 0;
         _imgArr = [NSMutableArray arrayWithArray:imgs];
         
@@ -55,15 +53,16 @@
         
         [self createUI];
         
-        
     }
     return self;
 }
-
+- (void)setShowMessageStr:(NSString *)showMessageStr{
+    self.showMessageLabel.text = showMessageStr;
+    [self.showMessageLabel sizeToFit];
+    self.showMessageLabel.frame = CGRectMake((SCREEN_WIDTH - _showMessageLabel.frame.size.width - 10 * WIDTH) / 2, (SCREEN_HEIGHT - _showMessageLabel.frame.size.width - 10 * WIDTH) / 2, _showMessageLabel.frame.size.width + 10 * WIDTH, _showMessageLabel.frame.size.width + 10 * HEIGHT);
+}
 - (void)saveMethod
 {
-    //    [SVProgressHUD show];
-    
     switch (_imageType) {
         case IMAGETYPE_URL:
         {
@@ -82,8 +81,6 @@
             }
         }
             break;
-            
-            
         default:
         {
             if (self.imgArr.count > 0) {
@@ -117,6 +114,7 @@
 - (void)saveGif:(NSData *)gifData
 {
     
+    __weak typeof (self)weakSelf = self;
     // 保存到本地相册
     ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
     [library writeImageDataToSavedPhotosAlbum:gifData metadata:nil completionBlock:^(NSURL *assetURL, NSError *error) {
@@ -124,12 +122,17 @@
         //            [SVProgressHUD dismiss];
         //        }];
         
+        
         if (error) {
             
             dispatch_async(dispatch_get_main_queue(), ^{
-                
-                //                [SVProgressHUD showSuccessWithStatus:@"图片保存失败"];
+                weakSelf.showMessageStr = @"图片保存失败";
+                [weakSelf addSubview:weakSelf.showMessageLabel];
+                weakSelf.showMessageLabel.hidden = NO;
+                [weakSelf performSelector:@selector(hiddenMessage) withObject:@[@0, @1] afterDelay:0.9];
             });
+            [weakSelf dissShomessage];
+            
             
         }
         else
@@ -137,13 +140,28 @@
             NSLog(@"Success at %@", [assetURL path] );
             
             dispatch_async(dispatch_get_main_queue(), ^{
-                
-                //                [SVProgressHUD showSuccessWithStatus:@"图片保存成功"];
+                weakSelf.showMessageStr = @"图片保存成功";
+                [weakSelf addSubview:weakSelf.showMessageLabel];
+                weakSelf.showMessageLabel.hidden = NO;
+                [weakSelf performSelector:@selector(hiddenMessage) withObject:@[@0, @1] afterDelay:0.9];
             });
+            
+            //            [weakSelf dissShomessage];
             
             
         }
     }] ;
+}
+- (void)dissShomessage{
+    
+    //    double delayInSeconds = self.showMessageStr.length * 5;
+    //NSTimer *timer = [NSTimer scheduledTimerWithTimeInterval:delayInSeconds target:self selector:@selector(hiddenMessage) userInfo:nil repeats:NO];
+    //    [self performSelector:@selector(hiddenMessage) withObject:nil/*可传任意类型参数*/ afterDelay:delayInSeconds];
+    
+}
+- (void)hiddenMessage{
+    self.showMessageLabel.hidden = YES;
+    
 }
 //    // 本地沙盒目录
 
@@ -158,23 +176,30 @@
     // 得到本地沙盒中名为"MyImage"的路径，"MyImage"是保存的图片名
     NSString *imageFilePath = [path stringByAppendingPathComponent:@"MyImage"];
     // 将取得的图片写入本地的沙盒中，其中0.5表示压缩比例，1表示不压缩，数值越小压缩比例越大
+    __weak typeof (self)weakSelf = self;
+    
     BOOL success = [UIImageJPEGRepresentation(image, 1) writeToFile:imageFilePath  atomically:YES];
     if (success){
         NSLog(@"写入本地成功");
+        
         dispatch_async(dispatch_get_main_queue(), ^{
-            //            [SVProgressHUD dismiss];
-            //
-            //            [SVProgressHUD showSuccessWithStatus:@"图片保存成功"];
+            weakSelf.showMessageStr = @"图片保存成功";
+            [weakSelf addSubview:weakSelf.showMessageLabel];
+            weakSelf.showMessageLabel.hidden = NO;
+            [weakSelf performSelector:@selector(hiddenMessage) withObject:@[@0, @1] afterDelay:0.9];
             
         });
+        
     }
     else
     {
         dispatch_async(dispatch_get_main_queue(), ^{
-            //            [SVProgressHUD dismiss];
+            weakSelf.showMessageStr = @"图片保存失败";
+            [weakSelf addSubview:weakSelf.showMessageLabel];
+            weakSelf.showMessageLabel.hidden = NO;
+            [weakSelf performSelector:@selector(hiddenMessage) withObject:@[@0, @1] afterDelay:0.9];
             
         });
-        
         
         
     }
@@ -466,7 +491,6 @@
             //切换到主线程中刷新图片
             [[NSOperationQueue mainQueue] addOperationWithBlock:^{
                 [self.collectionView reloadItemsAtIndexPaths:@[[NSIndexPath indexPathForRow:indexPath.row inSection:indexPath.section]]];
-                //                [self.collectionView reloadRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:indexPath.row inSection:indexPath.section]] withRowAnimation:UITableViewRowAnimationBottom];
             }];
         }];
         //添加线程到缓存池中
@@ -474,7 +498,6 @@
         //子线程添加到队列中，开始执行
         [self.queue addOperation:blockOperation];
     }
-    
     //4. 返回占位图片
     return [UIImage imageNamed:@""];
 }
@@ -497,10 +520,8 @@
     
     _saveBtn.userInteractionEnabled = YES;
     
-    
     [self addSubview:self.imgCountLabel];
     _imgCountLabel.frame = CGRectMake(15 * WIDTH, SCREEN_HEIGHT - TabBar_HEIGHT - TabbarSafeAreaBottomHeight, 70 * WIDTH, TabBar_HEIGHT + TabbarSafeAreaBottomHeight);
-    
     
 }
 - (UILabel *)imgCountLabel
@@ -543,7 +564,6 @@
     if (!_imageDictM) {
         //初始化图片缓存池
         _imageDictM = [NSMutableDictionary dictionary];
-        
     }
     return _imageDictM;
 }
@@ -553,7 +573,6 @@
     if (!_operationsDictM) {
         //初始化线程缓存池
         _operationsDictM = [NSMutableDictionary dictionary];
-        
     }
     return _operationsDictM;
 }
@@ -566,4 +585,17 @@
     return _queue;
 }
 
+- (UILabel *)showMessageLabel
+{
+    if (!_showMessageLabel) {
+        _showMessageLabel = [[UILabel alloc]init];
+        _showMessageLabel.text = @"保存成功";
+        _showMessageLabel.backgroundColor = [UIColor colorWithWhite:0 alpha:0.5];
+        _showMessageLabel.textColor = [UIColor whiteColor];
+        _showMessageLabel.font = FONT_TEXTSIZE(12);
+        _showMessageLabel.textAlignment = NSTextAlignmentCenter;
+        
+    }
+    return _showMessageLabel;
+}
 @end
