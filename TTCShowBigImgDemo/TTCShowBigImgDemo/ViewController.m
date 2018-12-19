@@ -32,15 +32,18 @@
     NSArray *imgUrlArr = @[
                            @"http://uploads.mallguang.top/dynamic/20181206/15440606647710.jpeg",
                            @"http://uploads.mallguang.top/dynamic/20181206/15440606643171.jpeg",
+                           @"https://upfile.asqql.com/2009pasdfasdfic2009s305985-ts/2018-11/201811181656686643.gif",
+                           @"201811181656686643.gif",
                            @"http://uploads.mallguang.top/dynamic/20181206/15440606642752.jpeg",
                            @"http://uploads.mallguang.top/dynamic/20181206/15440606644453.jpeg",
                            @"http://uploads.mallguang.top/dynamic/20181206/15440606648834.jpeg",
                            @"http://uploads.mallguang.top/dynamic/20181206/15440606641755.jpeg",
                            @"http://uploads.mallguang.top/dynamic/20181206/15440606646296.jpeg",
                            @"http://uploads.mallguang.top/dynamic/20181206/15440606644797.jpeg",
-                           @"http://uploads.mallguang.top/dynamic/20181206/15440606644348.jpeg"
+                           @"http://uploads.mallguang.top/dynamic/20181206/15440606644348.jpeg",
+                           
                            ];
-    TTCShowBigImgView *picView = [[TTCShowBigImgView alloc]initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT) withImgs:imgUrlArr withImgeType:IMAGETYPE_URL];
+    TTCShowBigImgView *picView = [[TTCShowBigImgView alloc]initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT) withImgs:imgUrlArr];
     [self.view addSubview:picView];//加载到当前页面
     //    [[UIApplication sharedApplication].keyWindow addSubview:picView];//加载到window
     picView.selectInteger = 0;

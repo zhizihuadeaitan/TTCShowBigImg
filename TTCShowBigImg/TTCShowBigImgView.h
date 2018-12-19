@@ -7,14 +7,10 @@
 //
 
 #import <AssetsLibrary/AssetsLibrary.h>
+#import <Photos/Photos.h>
+#import "UIImageView+TTCTool.h"
 
 @import UIKit;
-
-typedef NS_ENUM(NSUInteger,IMAGETYPE) {
-    IMAGETYPE_ASSETS = 1,//相册图片
-    IMAGETYPE_URL = 2,//网络图片
-    IMAGETYPE_IMAGE = 3//本地图片
-};
 
 #import "TTCPicCollectionViewCell.h"
 
@@ -24,7 +20,6 @@ typedef void(^XHPicBlock)(CLICKEVENTTYPE clickType);
 
 @interface TTCShowBigImgView : UIView
 
-@property (nonatomic, assign) IMAGETYPE imageType;
 
 /** 关闭按钮 */
 @property (nonatomic, strong) UIButton *delBtn;
@@ -44,7 +39,7 @@ typedef void(^XHPicBlock)(CLICKEVENTTYPE clickType);
 @property (nonatomic, copy) NSString *showMessageStr;
 
 
-- (instancetype)initWithFrame:(CGRect)frame withImgs:(NSArray *)imgs withImgeType:(IMAGETYPE)imageType;
+- (instancetype)initWithFrame:(CGRect)frame withImgs:(NSArray *)imgs;
 
 @end
 

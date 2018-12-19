@@ -31,17 +31,11 @@
 @implementation TTCShowBigImgView
 
 //初始化 网络图片
--(instancetype)initWithFrame:(CGRect)frame withImgs:(NSArray *)imgs withImgeType:(IMAGETYPE)imageType
+-(instancetype)initWithFrame:(CGRect)frame withImgs:(NSArray *)imgs
 {
     if (self = [super initWithFrame:frame]) {
         self.frame = frame;
-        if (imageType) {
-            _imageType = imageType;
-        }
-        else
-        {
-            _imageType = IMAGETYPE_URL;
-        }
+        
         
         self.backgroundColor = [UIColor blackColor];
         
@@ -61,175 +55,160 @@
     [self.showMessageLabel sizeToFit];
     self.showMessageLabel.frame = CGRectMake((SCREEN_WIDTH - _showMessageLabel.frame.size.width - 10 * WIDTH) / 2, (SCREEN_HEIGHT - _showMessageLabel.frame.size.width - 10 * WIDTH) / 2, _showMessageLabel.frame.size.width + 10 * WIDTH, _showMessageLabel.frame.size.width + 10 * HEIGHT);
 }
+
+
+#pragma mark - 事件
 - (void)saveMethod
 {
-    switch (_imageType) {
-        case IMAGETYPE_URL:
-        {
-            NSString *urlString = self.imgArr[self.selectInteger];
-            NSData *data = [NSData dataWithContentsOfURL:[NSURL  URLWithString:urlString]];
+    if (self.imgArr.count == 0) {
+        return;
+    }
+    
+    id resource = self.imgArr[self.selectInteger];
+    
+    if ([resource isKindOfClass:[UIImage class]]) {
+        //image图片
+        [self saveImageIntoSystemAlbumFromImage:resource completion:^(id assetResult, NSError *error, BOOL isExistedOrIsSuccess) {
             
-            if ([urlString containsString:@".gif"]) {
-                [self saveGif:data];
+        }];
+        
+    }
+    else if ([resource isKindOfClass:[NSString class]])
+    {
+        if ([resource containsString:@"http"]) {
+            //网络图片
+            NSData *data = [NSData dataWithContentsOfURL:[NSURL  URLWithString:resource]];
+            [self saveImageIntoSystemAlbumFromImage:data completion:^(id assetResult, NSError *error, BOOL isExistedOrIsSuccess) {
                 
-            }
-            else
-            {
-                UIImage *image = [UIImage imageWithData:data]; // 取得图片
-                //保存图片
-                [self saveImage:image];
-            }
-        }
-            break;
-        default:
-        {
-            if (self.imgArr.count > 0) {
-                UIImage *image = self.imgArr[self.selectInteger];
-                //保存图片
-                [self saveImage:image];
-            }
-        }
-            break;
-    }
-    
-}
-- (void)setImageType:(IMAGETYPE)imageType
-{
-    _imageType = imageType;
-    [self.collectionView reloadData];
-}
-- (UIButton *)saveBtn
-{
-    if (!_saveBtn) {
-        
-        _saveBtn = [UIButton buttonWithType:UIButtonTypeCustom];
-        _saveBtn.tag = 4;
-        [_saveBtn setTitle:@"保存" forState:UIControlStateNormal];
-        [_saveBtn addTarget:self action:@selector(saveMethod) forControlEvents:UIControlEventTouchUpInside];
-        
-    }
-    
-    return _saveBtn;
-}
-- (void)saveGif:(NSData *)gifData
-{
-    
-    __weak typeof (self)weakSelf = self;
-    // 保存到本地相册
-    ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
-    [library writeImageDataToSavedPhotosAlbum:gifData metadata:nil completionBlock:^(NSURL *assetURL, NSError *error) {
-        //        [TTCGCDQueue executeInMainQueue:^{
-        //            [SVProgressHUD dismiss];
-        //        }];
-        
-        
-        if (error) {
-            
-            dispatch_async(dispatch_get_main_queue(), ^{
-                weakSelf.showMessageStr = @"图片保存失败";
-                [weakSelf addSubview:weakSelf.showMessageLabel];
-                weakSelf.showMessageLabel.hidden = NO;
-                [weakSelf performSelector:@selector(hiddenMessage) withObject:@[@0, @1] afterDelay:0.9];
-            });
-            [weakSelf dissShomessage];
-            
-            
+            }];
         }
         else
         {
-            NSLog(@"Success at %@", [assetURL path] );
-            
-            dispatch_async(dispatch_get_main_queue(), ^{
-                weakSelf.showMessageStr = @"图片保存成功";
-                [weakSelf addSubview:weakSelf.showMessageLabel];
-                weakSelf.showMessageLabel.hidden = NO;
-                [weakSelf performSelector:@selector(hiddenMessage) withObject:@[@0, @1] afterDelay:0.9];
-            });
-            
-            //            [weakSelf dissShomessage];
-            
+            //本地图片
+            NSURL * url = [[NSURL alloc]initFileURLWithPath:[[NSBundle mainBundle] pathForResource:resource ofType:nil]];
+            NSData *data = [NSData dataWithContentsOfURL:url];
+            [self saveImageIntoSystemAlbumFromImage:data completion:^(id assetResult, NSError *error, BOOL isExistedOrIsSuccess) {
+                
+            }];
             
         }
-    }] ;
-}
-- (void)dissShomessage{
+    }
     
-    //    double delayInSeconds = self.showMessageStr.length * 5;
-    //NSTimer *timer = [NSTimer scheduledTimerWithTimeInterval:delayInSeconds target:self selector:@selector(hiddenMessage) userInfo:nil repeats:NO];
-    //    [self performSelector:@selector(hiddenMessage) withObject:nil/*可传任意类型参数*/ afterDelay:delayInSeconds];
     
 }
+#pragma mark 保存图片到相机胶卷,并返回对象
+- (void)saveImageIntoSystemAlbumFromImage:(id)resources completion:(void (^)(id assetResult, NSError *error, BOOL isExistedOrIsSuccess))completion
+{
+    __weak typeof (self)weakSelf = self;
+    
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        
+        if ([resources isKindOfClass:[UIImage class]]) {
+            // 保存相片到相机胶卷
+            NSError *error1 = nil;
+            __block PHObjectPlaceholder *createdAsset = nil;
+            [[PHPhotoLibrary sharedPhotoLibrary] performChangesAndWait:^{
+                createdAsset = [PHAssetCreationRequest creationRequestForAssetFromImage:resources].placeholderForCreatedAsset;
+            } error:&error1];
+            if (!error1) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    weakSelf.showMessageStr = @"图片保存成功";
+                    [weakSelf addSubview:weakSelf.showMessageLabel];
+                    weakSelf.showMessageLabel.hidden = NO;
+                    [weakSelf performSelector:@selector(hiddenMessage) withObject:@[@0, @1] afterDelay:0.9];
+                    
+                });
+            }
+            else
+            {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    weakSelf.showMessageStr = @"图片保存失败";
+                    [weakSelf addSubview:weakSelf.showMessageLabel];
+                    weakSelf.showMessageLabel.hidden = NO;
+                    [weakSelf performSelector:@selector(hiddenMessage) withObject:@[@0, @1] afterDelay:0.9];
+                    
+                });
+            }
+            return ;
+        }
+        
+        [[PHPhotoLibrary sharedPhotoLibrary] performChanges:^{
+            [[PHAssetCreationRequest creationRequestForAsset] addResourceWithType:PHAssetResourceTypePhoto data:resources options:nil];
+        } completionHandler:^(BOOL success, NSError * _Nullable error) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                //                [gifAnimation stop];
+                if(success && !error){
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        weakSelf.showMessageStr = @"图片保存成功";
+                        [weakSelf addSubview:weakSelf.showMessageLabel];
+                        weakSelf.showMessageLabel.hidden = NO;
+                        [weakSelf performSelector:@selector(hiddenMessage) withObject:@[@0, @1] afterDelay:0.9];
+                        
+                    });
+                }else
+                {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        weakSelf.showMessageStr = @"图片保存失败";
+                        [weakSelf addSubview:weakSelf.showMessageLabel];
+                        weakSelf.showMessageLabel.hidden = NO;
+                        [weakSelf performSelector:@selector(hiddenMessage) withObject:@[@0, @1] afterDelay:0.9];
+                        
+                    });
+                }
+            });
+        }];
+        
+        
+    });
+    
+    
+}
+
 - (void)hiddenMessage{
     self.showMessageLabel.hidden = YES;
     
 }
+//
+//- (void)saveImage:(UIImage *)image {
+//
 //    // 本地沙盒目录
-
+//    NSString *path = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];
+//    // 得到本地沙盒中名为"MyImage"的路径，"MyImage"是保存的图片名
+//    NSString *imageFilePath = [path stringByAppendingPathComponent:@"MyImage"];
+//    // 将取得的图片写入本地的沙盒中，其中0.5表示压缩比例，1表示不压缩，数值越小压缩比例越大
+//    __weak typeof (self)weakSelf = self;
+//
+//    BOOL success = [UIImageJPEGRepresentation(image, 1) writeToFile:imageFilePath  atomically:YES];
+//    if (success){
+//        NSLog(@"写入本地成功");
+//
+//        dispatch_async(dispatch_get_main_queue(), ^{
+//            weakSelf.showMessageStr = @"图片保存成功";
+//            [weakSelf addSubview:weakSelf.showMessageLabel];
+//            weakSelf.showMessageLabel.hidden = NO;
+//            [weakSelf performSelector:@selector(hiddenMessage) withObject:@[@0, @1] afterDelay:0.9];
+//
+//        });
+//
+//    }
+//    else
+//    {
+//        dispatch_async(dispatch_get_main_queue(), ^{
+//            weakSelf.showMessageStr = @"图片保存失败";
+//            [weakSelf addSubview:weakSelf.showMessageLabel];
+//            weakSelf.showMessageLabel.hidden = NO;
+//            [weakSelf performSelector:@selector(hiddenMessage) withObject:@[@0, @1] afterDelay:0.9];
+//
+//        });
 //
 //
-//     UIImageWriteToSavedPhotosAlbum(image, self, @selector(image:didFinishSavingWithError:contextInfo:), nil);
+//    }
+//
+//    UIImageWriteToSavedPhotosAlbum(image, self, @selector(image:didFinishSavingWithError:contextInfo:), nil);
 //}
-- (void)saveImage:(UIImage *)image {
-    
-    // 本地沙盒目录
-    NSString *path = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];
-    // 得到本地沙盒中名为"MyImage"的路径，"MyImage"是保存的图片名
-    NSString *imageFilePath = [path stringByAppendingPathComponent:@"MyImage"];
-    // 将取得的图片写入本地的沙盒中，其中0.5表示压缩比例，1表示不压缩，数值越小压缩比例越大
-    __weak typeof (self)weakSelf = self;
-    
-    BOOL success = [UIImageJPEGRepresentation(image, 1) writeToFile:imageFilePath  atomically:YES];
-    if (success){
-        NSLog(@"写入本地成功");
-        
-        dispatch_async(dispatch_get_main_queue(), ^{
-            weakSelf.showMessageStr = @"图片保存成功";
-            [weakSelf addSubview:weakSelf.showMessageLabel];
-            weakSelf.showMessageLabel.hidden = NO;
-            [weakSelf performSelector:@selector(hiddenMessage) withObject:@[@0, @1] afterDelay:0.9];
-            
-        });
-        
-    }
-    else
-    {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            weakSelf.showMessageStr = @"图片保存失败";
-            [weakSelf addSubview:weakSelf.showMessageLabel];
-            weakSelf.showMessageLabel.hidden = NO;
-            [weakSelf performSelector:@selector(hiddenMessage) withObject:@[@0, @1] afterDelay:0.9];
-            
-        });
-        
-        
-    }
-    
-    UIImageWriteToSavedPhotosAlbum(image, self, @selector(image:didFinishSavingWithError:contextInfo:), nil);
-}
+//
+//
 
-- (void)image:(UIImage *)image didFinishSavingWithError:(NSError *)error contextInfo:(void *)contextInfo {
-    if (error) {
-        // Fail
-    } else {
-        // Success
-    }
-}
-- (UIButton *)delBtn
-{
-    if (!_delBtn) {
-        UIImage *img = [UIImage imageNamed:@"Img_closex"];
-        
-        _delBtn = [UIButton buttonWithType:UIButtonTypeCustom];
-        _delBtn.tag = 4;
-        [self.superview addSubview:_delBtn];
-        _delBtn.frame = CGRectMake(10 ,40 , img.size.width * 2, img.size.height*2);
-        [_delBtn setImage:img forState:UIControlStateNormal];
-        [_delBtn addTarget:self action:@selector(delMethod) forControlEvents:UIControlEventTouchUpInside];
-        
-    }
-    
-    return _delBtn;
-}
 - (void)delMethod
 {
     self.hidden = YES;
@@ -345,91 +324,59 @@
         cell = [[TTCPicCollectionViewCell alloc]init];
         
     }
+    __weak typeof (self)weakSelf = self;
+    
     cell.imageView.image = nil;
-    switch (_imageType) {
-        case IMAGETYPE_URL:
-        {
+    id resource = _imgArr[indexPath.item];
+    if ([resource isKindOfClass:[UIImage class]]) {
+        //image图片
+        [cell.imageView setImage:_imgArr[indexPath.item]];
+        
+    }
+    else if ([resource isKindOfClass:[NSString class]])
+    {
+        if ([resource containsString:@"http"]) {
             //网络图片
-            UIImage *img = [self imageForCell_imageURL:_imgArr[indexPath.item] indexPath:indexPath];
-            [cell.imageView setImage:img];
+            if ([resource containsString:@".gif"]) {
+                [cell.imageView yh_setImage:[NSURL URLWithString:_imgArr[indexPath.item]]];
+                
+            }
+            else
+            {
+                [cell.imageView setImage:[self imageForCell_imageURL:resource indexPath:indexPath]];
+            }
         }
-            break;
-        case IMAGETYPE_IMAGE:
+        else
         {
             //本地图片
-            [cell.imageView setImage:_imgArr[indexPath.item]];
-            
-        }
-            break;
-        case IMAGETYPE_ASSETS:
-        {
-            //相册图片
-            if ([_imgArr [indexPath.item]isKindOfClass:[ALAsset class]])
-            {
-                @autoreleasepool {
-                    //这里尽量不用thumbnail属性，因为太模糊了，可以用aspectRatioThumbnail比例缩略图代替
-                    ALAsset *asset = _imgArr [indexPath.item];
-                    //这里就不要用thumbnail属性了，太模糊
-                    __block UIImage * image = [UIImage imageWithCGImage:asset.aspectRatioThumbnail];
-                    
-                    dispatch_async(dispatch_get_global_queue(0, 0), ^{
-                        if (asset.defaultRepresentation.fullScreenImage) {
-                            
-                            image = [UIImage imageWithCGImage:asset.defaultRepresentation.fullScreenImage];
-                        }
-                        if (!image)
-                        {
-                            if (asset.aspectRatioThumbnail) {
-                                image = [UIImage imageWithCGImage:asset.aspectRatioThumbnail];
-                            }
-                            if (image)
-                            {
-                                [self.imgArr replaceObjectAtIndex:indexPath.item withObject:image];
-                                
-                                dispatch_async(dispatch_get_main_queue(), ^{
-                                    [cell.imageView setImage:image];
-                                    
-                                });
-                                
-                                
-                            }
-                            else
-                            {
-                                if (asset.thumbnail) {
-                                    
-                                    image = [UIImage imageWithCGImage:asset.thumbnail];
-                                }
-                                if (image)
-                                {
-                                    [_imgArr replaceObjectAtIndex:indexPath.item withObject:image];
-                                    dispatch_async(dispatch_get_main_queue(), ^{
-                                        [cell.imageView setImage:image];
-                                        
-                                    });
-                                }
-                            }
-                            
-                        }
-                        else
-                        {
-                            [self.imgArr replaceObjectAtIndex:indexPath.item withObject:image];
-                            dispatch_async(dispatch_get_main_queue(), ^{
-                                [cell.imageView setImage:image];
-                                
-                            });
-                        }
-                    });
-                }
+            NSURL * url = [[NSURL alloc]initFileURLWithPath:[[NSBundle mainBundle] pathForResource:resource ofType:nil]];
+            if ([resource containsString:@".gif"]) {
+                [cell.imageView yh_setImage:url];
                 
+            }
+            else
+            {
+                [cell.imageView setImage:[self imageForCell_imageURL:resource indexPath:indexPath]];
             }
             
         }
-            break;
-        default:
-            break;
+    }
+    else if ([resource isKindOfClass:[PHAsset class]])
+    {
+        //相册图片
+        @autoreleasepool {
+            PHAsset *asset = _imgArr [indexPath.item];
+            [[PHCachingImageManager defaultManager] requestImageForAsset:asset targetSize:CGSizeMake(600, 600) contentMode:PHImageContentModeAspectFit options:nil resultHandler:^(UIImage * _Nullable image, NSDictionary * _Nullable info) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [cell.imageView setImage:image];
+                    [weakSelf.imgArr replaceObjectAtIndex:indexPath.item withObject:image];
+                });
+                
+            }];
+            
+        }
     }
     
-    __weak typeof (self)weakSelf = self;
     cell.myBlock = ^(CLICKEVENTTYPE clickType){
         
         if (weakSelf.eventBlock) {
@@ -447,9 +394,7 @@
         NSLog(@"从内存中读取图片缓存");
         return image;
     }
-    
     //2.如果内存中不存在，再去沙盒中查看是否有缓存图片
-    
     //保存到沙河缓存
     NSString *caches= [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES)lastObject];//文件夹路径
     //获得图片名称,不能包含/   "http://p19.qhimg.com/dr/48_48_/t0164ad383c622aabef.png"
@@ -463,9 +408,7 @@
         NSLog(@"从沙盒中读取图片缓存");
         return image;
     }
-    
-    //3.1 如果沙盒中不存在，再看看线程池中是否存在正在下载该图片的子线程
-    //3.2 如果该子线程�不存在, 则开启新的子线程来下载图片，并在下载成功后刷新对应视图
+        //3.2 如果该子线程�不存在, 则开启新的子线程来下载图片，并在下载成功后刷新对应视图
     
     NSBlockOperation *operation = [self.operationsDictM objectForKey:imageURL];
     if (!operation) {
@@ -503,7 +446,6 @@
 }
 
 
-#pragma mark - 事件
 
 #pragma mark - 懒加载
 
@@ -597,5 +539,34 @@
         
     }
     return _showMessageLabel;
+}
+- (UIButton *)delBtn
+{
+    if (!_delBtn) {
+        UIImage *img = [UIImage imageNamed:@"Img_closex"];
+        
+        _delBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        _delBtn.tag = 4;
+        [self.superview addSubview:_delBtn];
+        _delBtn.frame = CGRectMake(10 ,40 , img.size.width * 2, img.size.height*2);
+        [_delBtn setImage:img forState:UIControlStateNormal];
+        [_delBtn addTarget:self action:@selector(delMethod) forControlEvents:UIControlEventTouchUpInside];
+        
+    }
+    
+    return _delBtn;
+}
+- (UIButton *)saveBtn
+{
+    if (!_saveBtn) {
+        
+        _saveBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        _saveBtn.tag = 4;
+        [_saveBtn setTitle:@"保存" forState:UIControlStateNormal];
+        [_saveBtn addTarget:self action:@selector(saveMethod) forControlEvents:UIControlEventTouchUpInside];
+        
+    }
+    
+    return _saveBtn;
 }
 @end

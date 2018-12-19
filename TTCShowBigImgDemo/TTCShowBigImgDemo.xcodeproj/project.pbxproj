@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AD15A89621C8C1D600B02997 /* UIImageView+TTCTool.m in Sources */ = {isa = PBXBuildFile; fileRef = AD15A89521C8C1D600B02997 /* UIImageView+TTCTool.m */; };
+		AD15A89821C8CEE200B02997 /* 201811181656686643.gif in Resources */ = {isa = PBXBuildFile; fileRef = AD15A89721C8CEE200B02997 /* 201811181656686643.gif */; };
 		ADB5AD1B21C786DA00AABA19 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = ADB5AD1A21C786DA00AABA19 /* AppDelegate.m */; };
 		ADB5AD1E21C786DA00AABA19 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = ADB5AD1D21C786DA00AABA19 /* ViewController.m */; };
 		ADB5AD2121C786DA00AABA19 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = ADB5AD1F21C786DA00AABA19 /* Main.storyboard */; };
@@ -38,6 +40,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		AD15A89421C8C1D600B02997 /* UIImageView+TTCTool.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "UIImageView+TTCTool.h"; sourceTree = "<group>"; };
+		AD15A89521C8C1D600B02997 /* UIImageView+TTCTool.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "UIImageView+TTCTool.m"; sourceTree = "<group>"; };
+		AD15A89721C8CEE200B02997 /* 201811181656686643.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = 201811181656686643.gif; sourceTree = "<group>"; };
 		ADB5AD1621C786DA00AABA19 /* TTCShowBigImgDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TTCShowBigImgDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		ADB5AD1921C786DA00AABA19 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		ADB5AD1A21C786DA00AABA19 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -116,6 +121,7 @@
 				ADB5AD1A21C786DA00AABA19 /* AppDelegate.m */,
 				ADB5AD1C21C786DA00AABA19 /* ViewController.h */,
 				ADB5AD1D21C786DA00AABA19 /* ViewController.m */,
+				AD15A89721C8CEE200B02997 /* 201811181656686643.gif */,
 				ADB5AD1F21C786DA00AABA19 /* Main.storyboard */,
 				ADB5AD2221C786DA00AABA19 /* Assets.xcassets */,
 				ADB5AD2421C786DA00AABA19 /* LaunchScreen.storyboard */,
@@ -150,6 +156,8 @@
 				ADB5AD4E21C7873500AABA19 /* TTCPicCollectionViewCell.m */,
 				ADB5AD5821C7BC9100AABA19 /* TTCShowBigImgView.h */,
 				ADB5AD5921C7BC9100AABA19 /* TTCShowBigImgView.m */,
+				AD15A89421C8C1D600B02997 /* UIImageView+TTCTool.h */,
+				AD15A89521C8C1D600B02997 /* UIImageView+TTCTool.m */,
 			);
 			name = TTCShowBigImg;
 			path = ../TTCShowBigImg;
@@ -269,6 +277,7 @@
 				ADB5AD2621C786DA00AABA19 /* LaunchScreen.storyboard in Resources */,
 				ADB5AD2321C786DA00AABA19 /* Assets.xcassets in Resources */,
 				ADB5AD2121C786DA00AABA19 /* Main.storyboard in Resources */,
+				AD15A89821C8CEE200B02997 /* 201811181656686643.gif in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -295,6 +304,7 @@
 			files = (
 				ADB5AD1E21C786DA00AABA19 /* ViewController.m in Sources */,
 				ADB5AD5121C7873500AABA19 /* TTCPicCollectionViewCell.m in Sources */,
+				AD15A89621C8C1D600B02997 /* UIImageView+TTCTool.m in Sources */,
 				ADB5AD2921C786DA00AABA19 /* main.m in Sources */,
 				ADB5AD5A21C7BC9100AABA19 /* TTCShowBigImgView.m in Sources */,
 				ADB5AD1B21C786DA00AABA19 /* AppDelegate.m in Sources */,
